@@ -92,7 +92,7 @@ libattopng_t *libattopng_new(size_t width, size_t height, libattopng_type_t type
         png->bpp = 4;
     }
 
-    png->data = (char *) malloc(png->capacity);
+    png->data = (char *) calloc(png->capacity, 1);
     if (!png->data) {
         free(png->palette);
         free(png);
