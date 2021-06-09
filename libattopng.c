@@ -43,7 +43,7 @@ libattopng_t *libattopng_new(size_t width, size_t height, libattopng_type_t type
         /* ensure no type leads to an integer overflow */
         return NULL;
     }
-    png = (libattopng_t *) malloc(sizeof(libattopng_t));
+    png = (libattopng_t *) calloc(sizeof(libattopng_t), 1);
     png->width = width;
     png->height = height;
     png->capacity = width * height;
@@ -274,8 +274,8 @@ char *libattopng_get_data(libattopng_t *png, size_t *len) {
         /* delete old output if any */
         free(png->out);
     }
-    png->out_capacity = png->capacity + 4096 * 8;
-    png->out = (char *) malloc(png->out_capacity);
+    png->out_capacity = png->capacity + 4096 * 8 + png->width * png->height;
+    png->out = (char *) calloc(png->out_capacity, 1);
     png->out_pos = 0;
     if (!png->out) {
         return NULL;
@@ -321,6 +321,10 @@ char *libattopng_get_data(libattopng_t *png, size_t *len) {
 
     /* data */
     bpl = 1 + png->bpp * png->width;
+    if(bpl >= 65536) {
+        fprintf(stderr, "[libattopng] ERROR: maximum supported width for this type of PNG is %d pixel\n", (int)(65535 / png->bpp));
+        return NULL;
+    }
     raw_size = png->height * bpl;
     size = 2 + png->height * (5 + bpl) + 4;
     libattopng_new_chunk(png, "IDAT", size);
